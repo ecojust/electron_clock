@@ -623,8 +623,8 @@ export default {
       position:absolute;
       width:32px;
       height:32px;
-      right:-25px;
-      top:-16px;
+      right:-15px;
+      top:-10px;
       transform: rotate(45deg);
       cursor:pointer;
     }
