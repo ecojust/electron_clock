@@ -1,12 +1,12 @@
 <template>
   <div id="main">
-    <div class="menu"  style="-webkit-app-region: drag;">
-      <Icon type="ios-close" color="black" @click="win('close')"/>
-      <Icon type="ios-remove" color="black" @click="win('min')"/>
+    <div class="menu" @mouseenter="menuenter(true)" @mouseleave="menuenter(false)" style="-webkit-app-region: drag;">
+      <Icon type="ios-close" :color="menu?'black':'#ed6c60'" @click="win('close')"/>
+      <Icon type="ios-remove" :color="menu?'black':'#f6be4f'" @click="win('min')"/>
     </div>
 
         <div class="button" @click="toggle" style="position:absolute;top:40px;color:white;z-index:9">
-          toggleii
+          music
         </div>
     <!-- 时钟 -->
     <transition name="fadeToggle">
@@ -38,15 +38,27 @@
     <transition name="fadeToggle">
       <div class="clocklist">
         <div class="alarm" v-for="(item,index) in alarmlist" :key="index">
-          {{item.time}}
-          <i-switch v-model="item.open" size="small" true-color="rgba(255,255,255,0.8)" false-color="rgba(255,255,255,0.1)"></i-switch>
-          <Icon type="md-settings" />
+          <span class="alarmtime">{{item.time.h>9?item.time.h:('0'+item.time.h)}}</span>
+          <sub class="cn">时</sub>
+          <div class="operate">
+            <Icon type="md-arrow-dropup" @click="hoperate(index,'up')" />
+            <Icon type="md-arrow-dropdown" @click="hoperate(index,'down')" />
+          </div>
+          <span class="alarmtime">{{item.time.m>9?item.time.m:('0'+item.time.m)}}</span>
+          <sub class="cn">分</sub>
+          <div class="operate">
+            <Icon type="md-arrow-dropup" @click="moperate(index,'up')" />
+            <Icon type="md-arrow-dropdown" @click="moperate(index,'down')" />
+          </div>
+          <i-switch @on-change="storage('set')" class="lock" v-model="item.open" size="small" true-color="rgba(255,255,255,0.8)" false-color="rgba(255,255,255,0.1)"></i-switch>
+          <!-- <Icon type="md-settings" /> -->
           <div class="weeks">
             <span @click="toggleweek(index,idx)" :class="{'week':true,'active':i.value}"  v-for="(i,idx) in item.week" :key="'w'+idx">
               {{i.name[0]}}
             </span>
           </div>
         </div>
+
       </div>
     </transition>
 
@@ -68,6 +80,7 @@ export default {
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
+      menu:false,
       music:mp3,
       h:0,
       m:0,
@@ -78,7 +91,10 @@ export default {
       alarm:false,
       alarmlist:[
         {
-          time:'14:39',
+          time:{
+            h:13,
+            m:12
+          },
           open:true,
           week:[
             {
@@ -119,7 +135,10 @@ export default {
           ]
         },
         {
-          time:'14:39',
+          time:{
+            h:8,
+            m:12
+          },
           open:true,
           week:[
             {
@@ -160,7 +179,10 @@ export default {
           ]
         },
         {
-          time:'14:39',
+          time:{
+            h:13,
+            m:12
+          },
           open:true,
           week:[
             {
@@ -201,7 +223,10 @@ export default {
           ]
         },
         {
-          time:'14:39',
+          time:{
+            h:13,
+            m:12
+          },
           open:true,
           week:[
             {
@@ -242,7 +267,10 @@ export default {
           ]
         },
         {
-          time:'14:39',
+          time:{
+            h:13,
+            m:12
+          },
           open:true,
           week:[
             {
@@ -287,6 +315,7 @@ export default {
   },
   created(){
       this.getNowFormatDate();
+      this.storage();
   },
   mounted(){
     this.ipcRenderer$on();
@@ -294,12 +323,16 @@ export default {
       this.getNowFormatDate();
     },1000)
   },
+  beforeDestroy(){
+
+  },
   methods:{
     getNowFormatDate() {
       var date = new Date();
       var h = date.getHours();
       var m = date.getMinutes();
       var s = date.getSeconds();
+      var week = date.getDay();
       this.h = h>9?h:('0'+h);
       this.m = m>9?m:('0'+m);
       this.s = s>9?s:('0'+s);
@@ -310,8 +343,20 @@ export default {
       }
       for(var i=0,size=this.alarmlist.length;i<size;i++){
         var item = this.alarmlist[i];
-        var hm=  this.h +':'+ this.m;
-        if(!this.alarm&&hm==item.time&&item.open){
+        var flag = false;
+        //判断当前无闹钟响,且闹钟开启,时、分都对
+        if(!this.alarm&&this.h==item.time.h&&this.m==item.time.m&&item.open){
+          var itemweek = item.week;
+          for(var j = 0;j<7;j++){
+            var day = itemweek[j];
+            //当前礼拜列表处于闹钟开启状态,确认闹铃开启
+            if(day.key==week&&day.value){
+              flag = true;
+              break;
+            }
+          }
+        }
+        if(flag){
           this.clockstart();
           item.open = false;
         }
@@ -319,6 +364,9 @@ export default {
     },
     win(type){
       ipcRenderer.send('win-'+type)
+    },
+    menuenter(bool){
+      this.menu = bool;
     },
     toggle(){
       if(this.alarm){
@@ -332,6 +380,39 @@ export default {
     toggleweek(index,idx){
       var value = this.alarmlist[index].week[idx].value;
       this.alarmlist[index].week[idx].value = !value;
+      this.storage('set');
+    },
+    hoperate(index,type){
+      if(type=='up'){
+        var h = this.alarmlist[index].time.h + 1;
+        if(h==24){
+          h = 0;
+        };
+        this.alarmlist[index].time.h = h;
+      }else{
+        var h = this.alarmlist[index].time.h - 1;
+        if(h==-1){
+          h = 23;
+        };
+        this.alarmlist[index].time.h = h;
+      };
+      this.storage('set');
+    },
+    moperate(index,type){
+      if(type=='up'){
+        var m = this.alarmlist[index].time.m + 1;
+        if(m==60){
+          m = 0;
+        };
+        this.alarmlist[index].time.m = m;
+      }else{
+        var m = this.alarmlist[index].time.m - 1;
+        if(m==-1){
+          m = 59;
+        };
+        this.alarmlist[index].time.m = m;
+      }
+      this.storage('set');      
     },
     clockstart(){
       var vm = this;
@@ -353,6 +434,17 @@ export default {
       var audio = document.getElementsByClassName('audio')[0];
       clock.removeChild(audio);
       this.alarm = false;
+    },
+    storage(type){
+      if(type=='set'){
+        var alarmlist = this.alarmlist;
+        localStorage.setItem('alarmlist',JSON.stringify(alarmlist));
+      }else{
+        var alarmlist = localStorage.getItem('alarmlist');
+        if(alarmlist){
+          this.alarmlist = JSON.parse(alarmlist);
+        }
+      }
     },
     open(){
       const {dialog} = require('electron').remote;
@@ -455,12 +547,41 @@ export default {
     z-index:99;
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
-
     .alarm{
-      border:1px solid red;
+      border:1px solid rgba(255, 255, 255, 0.6);
+      border-radius:8px;
       padding:5px;
       margin-bottom:5px;
+      text-align:left;
+      .alarmtime{
+        display:inline-block;
+        vertical-align: 8px;
+        font-size:20px;
+        font-weight:700;
+      }
+      .cn{
+        vertical-align: 8px;
+        font-size:65%;
+      }
+      .operate{
+        display:inline-block;
+        width:14px;
+        opacity:0;
+        >i{
+          display:block;
+          line-height:14px;
+          cursor:pointer;
+        }
+      }
+      .operate:hover{
+        opacity:1;
+      }
+      .lock{
+        float:right;
+        margin-top:4px;
+      }
       .weeks{
+        text-align:center;
         .week{
           display:inline-block;
           width:18px;
