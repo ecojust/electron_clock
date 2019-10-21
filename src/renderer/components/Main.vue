@@ -57,7 +57,10 @@
 <script>
 import {ipcRenderer} from 'electron'
 import { setTimeout } from 'timers';
-var mp3 = require("../../../static/song/真爱你的云.mp3");
+// var mp3 = require("../../../static/song/真爱你的云.mp3");
+var mp3 = require("../../../static/song/Five hundred miles.mp3");
+
+
 
 
 export default {
