@@ -13,21 +13,21 @@
       <div class="clock">
         <div class="top">
           <div class="h">
-            {{h}}
+            {{h>9?h:('0'+h)}}
             <div class="line"></div>
           </div>
           <div class="dot">
             {{dot}}
           </div>
           <div class="m">
-            {{m}}
+            {{m>9?m:('0'+m)}}
             <div class="line"></div>
           </div>
           <div class="dot">
             {{dot}}
           </div>
           <div class="s">
-            {{s}}
+            {{s>9?s:('0'+s)}}
             <div class="line"></div>
           </div>
         </div>
@@ -329,14 +329,11 @@ export default {
   methods:{
     getNowFormatDate() {
       var date = new Date();
-      var h = date.getHours();
-      var m = date.getMinutes();
-      var s = date.getSeconds();
+      this.h = date.getHours();
+      this.m = date.getMinutes();
+      this.s = date.getSeconds();
       var week = date.getDay();
-      this.h = h>9?h:('0'+h);
-      this.m = m>9?m:('0'+m);
-      this.s = s>9?s:('0'+s);
-      if(h > 12){
+      if(this.h > 12){
         this.timefiled = 'PM'
       }else{
         this.timefiled = 'AM'
@@ -345,7 +342,7 @@ export default {
         var item = this.alarmlist[i];
         var flag = false;
         //判断当前无闹钟响,且闹钟开启,时、分都对
-        if(!this.alarm&&this.h==item.time.h&&this.m==item.time.m&&item.open){
+        if(!this.alarm&&this.h==item.time.h&&this.m==item.time.m&&item.open&&this.s==0){
           var itemweek = item.week;
           for(var j = 0;j<7;j++){
             var day = itemweek[j];
@@ -358,7 +355,7 @@ export default {
         }
         if(flag){
           this.clockstart();
-          item.open = false;
+          // item.open = false;
         }
       }
     },
