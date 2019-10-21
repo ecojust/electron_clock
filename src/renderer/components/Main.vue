@@ -338,9 +338,9 @@ export default {
       }else{
         this.timefiled = 'AM'
       }
+      var flag = false;
       for(var i=0,size=this.alarmlist.length;i<size;i++){
         var item = this.alarmlist[i];
-        var flag = false;
         //判断当前无闹钟响,且闹钟开启,时、分都对
         if(!this.alarm&&this.h==item.time.h&&this.m==item.time.m&&item.open&&this.s==0){
           var itemweek = item.week;
@@ -353,10 +353,10 @@ export default {
             }
           }
         }
-        if(flag){
-          this.clockstart();
-          // item.open = false;
-        }
+      }
+      if(flag){
+        this.clockstart();
+        // item.open = false;
       }
     },
     win(type){
