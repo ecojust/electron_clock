@@ -6,7 +6,7 @@
     </div>
 
         <div class="button" @click="toggle" style="position:absolute;top:40px;color:white;z-index:9">
-          toggle
+          toggleii
         </div>
     <!-- 时钟 -->
     <transition name="fadeToggle">
