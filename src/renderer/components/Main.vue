@@ -36,7 +36,7 @@
 
     <!-- 闹钟 -->
     <transition name="fadeToggle">
-      <div class="clocklist">
+      <div :class="{'clocklist':true,'alarmshow':alarmshow}" @mouseenter="alarmbody(true)" @mouseleave="alarmbody(false)">
         <div class="alarm" v-for="(item,index) in alarmlist" :key="index">
           <span class="alarmtime">{{item.time.h>9?item.time.h:('0'+item.time.h)}}</span>
           <sub class="cn">时</sub>
@@ -58,7 +58,7 @@
             </span>
           </div>
         </div>
-
+        <img @mouseenter="clockenter('enter')" @mouseleave="clockenter('leave')" class="side" :src="clock" alt="">
       </div>
     </transition>
 
@@ -70,6 +70,8 @@
 import {ipcRenderer} from 'electron'
 import { setTimeout } from 'timers';
 // var mp3 = require("../../../static/song/真爱你的云.mp3");
+var alarm = require("../../../static/img/clock.png");
+
 var mp3 = require("../../../static/song/Five hundred miles.mp3");
 
 
@@ -82,6 +84,7 @@ export default {
       msg: 'Welcome to Your Vue.js App',
       menu:false,
       music:mp3,
+      clock:alarm,
       h:0,
       m:0,
       s:0,
@@ -89,6 +92,8 @@ export default {
       dotopacity:1,
       timefiled:'AM',
       alarm:false,
+      alarmshow:false,
+      alarmbodybool:false,
       alarmlist:[
         {
           time:{
@@ -365,6 +370,23 @@ export default {
     menuenter(bool){
       this.menu = bool;
     },
+    clockenter(type){
+      if(type=='enter'){
+        this.alarmshow = true;
+      }else{
+        setTimeout(()=>{
+          if(!this.alarmbodybool){
+            this.alarmshow = false;
+          }
+        },500)
+      }
+    },
+    alarmbody(bool){
+      this.alarmbodybool = bool;
+      if(!bool){
+        this.alarmshow = false;
+      }
+    },
     toggle(){
       if(this.alarm){
         this.clockstop();
@@ -534,13 +556,14 @@ export default {
     }
   }
   .clocklist{
+    transition: all 1s;
     background:rgba(255, 255, 255, 0.19);
     color:white;
     position:absolute;
     width:230px;
     padding:10px;
     top:130px;
-    left:0;
+    left:-230px;
     z-index:99;
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
@@ -596,7 +619,19 @@ export default {
         }
       }
     }
+    .side{
+      position:absolute;
+      width:32px;
+      height:32px;
+      right:-25px;
+      top:-16px;
+      transform: rotate(45deg);
+      cursor:pointer;
+    }
     
+  }
+  .alarmshow{
+    left:0;
   }
   // 淡入淡出,<transition  name="fadeToggle">
   .fadeToggle-enter,.fadeToggle-leave-to{
